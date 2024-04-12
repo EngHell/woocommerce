@@ -2,8 +2,8 @@
 
 ENABLE_TRACKING="${ENABLE_TRACKING:-0}"
 
-echo -e 'Activate twentynineteen theme \n'
-wp-env run tests-cli wp theme activate twentynineteen
+echo -e 'Activate default theme \n'
+wp-env run tests-cli wp theme activate twentytwentythree
 
 echo -e 'Update URL structure \n'
 wp-env run tests-cli wp rewrite structure '/%postname%/' --hard
@@ -22,7 +22,7 @@ wp-env run tests-cli wp plugin activate test-helper-apis
 echo -e 'Add Customer user \n'
 wp-env run tests-cli wp user create customer customer@woocommercecoree2etestsuite.com \
 	--user_pass=password \
-	--role=subscriber \
+	--role=customer \
 	--first_name='Jane' \
 	--last_name='Smith' \
 	--user_registered='2022-01-01 12:23:45'
@@ -37,3 +37,7 @@ if [ $ENABLE_TRACKING == 1 ]; then
 	echo -e 'Enable tracking\n'
 	wp-env run tests-cli wp option update woocommerce_allow_tracking 'yes'
 fi
+
+echo -e 'Upload test images \n'
+wp-env run tests-cli wp media import './test-data/images/image-01.png' './test-data/images/image-02.png' './test-data/images/image-03.png'
+

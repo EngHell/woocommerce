@@ -10,18 +10,24 @@ defined( 'ABSPATH' ) || exit;
 
 use Automattic\WooCommerce\Internal\AssignDefaultCategory;
 use Automattic\WooCommerce\Internal\BatchProcessing\BatchProcessingController;
+use Automattic\WooCommerce\Internal\ComingSoon\ComingSoonCacheInvalidator;
+use Automattic\WooCommerce\Internal\ComingSoon\ComingSoonRequestHandler;
 use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 use Automattic\WooCommerce\Internal\DownloadPermissionsAdjuster;
 use Automattic\WooCommerce\Internal\Features\FeaturesController;
 use Automattic\WooCommerce\Internal\ProductAttributesLookup\DataRegenerator;
 use Automattic\WooCommerce\Internal\ProductAttributesLookup\LookupDataStore;
 use Automattic\WooCommerce\Internal\ProductDownloads\ApprovedDirectories\Register as ProductDownloadDirectories;
+use Automattic\WooCommerce\Internal\ProductImage\MatchImageBySKU;
 use Automattic\WooCommerce\Internal\RegisterHooksInterface;
 use Automattic\WooCommerce\Internal\RestockRefundedItemsAdjuster;
 use Automattic\WooCommerce\Internal\Settings\OptionSanitizer;
 use Automattic\WooCommerce\Internal\Utilities\WebhookUtil;
 use Automattic\WooCommerce\Internal\Admin\Marketplace;
 use Automattic\WooCommerce\Proxies\LegacyProxy;
+use Automattic\WooCommerce\Utilities\{ LoggingUtil, TimeUtil };
+use Automattic\WooCommerce\Admin\WCAdminHelper;
+use Automattic\WooCommerce\Admin\Features\Features;
 
 /**
  * Main WooCommerce Class.
@@ -35,7 +41,7 @@ final class WooCommerce {
 	 *
 	 * @var string
 	 */
-	public $version = '8.3.0';
+	public $version = '8.9.0';
 
 	/**
 	 * WooCommerce Schema version.
@@ -248,6 +254,10 @@ final class WooCommerce {
 		add_action( 'deactivated_plugin', array( $this, 'deactivated_plugin' ) );
 		add_action( 'woocommerce_installed', array( $this, 'add_woocommerce_inbox_variant' ) );
 		add_action( 'woocommerce_updated', array( $this, 'add_woocommerce_inbox_variant' ) );
+		add_action( 'woocommerce_installed', array( $this, 'add_woocommerce_remote_variant' ) );
+		add_action( 'woocommerce_updated', array( $this, 'add_woocommerce_remote_variant' ) );
+		add_action( 'woocommerce_newly_installed', array( $this, 'add_lys_default_values' ) );
+		add_action( 'woocommerce_updated', array( $this, 'add_lys_default_values' ) );
 
 		// These classes set up hooks on instantiation.
 		$container = wc_get_container();
@@ -256,6 +266,7 @@ final class WooCommerce {
 		$container->get( AssignDefaultCategory::class );
 		$container->get( DataRegenerator::class );
 		$container->get( LookupDataStore::class );
+		$container->get( MatchImageBySKU::class );
 		$container->get( RestockRefundedItemsAdjuster::class );
 		$container->get( CustomOrdersTableController::class );
 		$container->get( OptionSanitizer::class );
@@ -263,6 +274,9 @@ final class WooCommerce {
 		$container->get( FeaturesController::class );
 		$container->get( WebhookUtil::class );
 		$container->get( Marketplace::class );
+		$container->get( TimeUtil::class );
+		$container->get( ComingSoonCacheInvalidator::class );
+		$container->get( ComingSoonRequestHandler::class );
 
 		/**
 		 * These classes have a register method for attaching hooks.
@@ -279,6 +293,9 @@ final class WooCommerce {
 	 * Add woocommerce_inbox_variant for the Remote Inbox Notification.
 	 *
 	 * P2 post can be found at https://wp.me/paJDYF-1uJ.
+	 *
+	 * This will no longer be used. The more flexible add_woocommerce_remote_variant
+	 * below will be used instead.
 	 */
 	public function add_woocommerce_inbox_variant() {
 		$config_name = 'woocommerce_inbox_variant_assignment';
@@ -286,6 +303,47 @@ final class WooCommerce {
 			update_option( $config_name, wp_rand( 1, 12 ) );
 		}
 	}
+
+	/**
+	 * Add woocommerce_remote_variant_assignment used to determine cohort
+	 * or group assignment for Remote Spec Engines.
+	 */
+	public function add_woocommerce_remote_variant() {
+		$config_name = 'woocommerce_remote_variant_assignment';
+		if ( false === get_option( $config_name, false ) ) {
+			update_option( $config_name, wp_rand( 1, 120 ) );
+		}
+	}
+
+	/**
+	 * Set default option values for launch your store task.
+	 */
+	public function add_lys_default_values() {
+		if ( ! Features::is_enabled( 'launch-your-store' ) ) {
+			return;
+		}
+
+		$is_new_install = current_action() === 'woocommerce_newly_installed';
+
+		$coming_soon      = $is_new_install ? 'yes' : 'no';
+		$store_pages_only = WCAdminHelper::is_site_fresh() ? 'no' : 'yes';
+		$private_link     = 'no';
+		$share_key        = wp_generate_password( 32, false );
+
+		if ( false === get_option( 'woocommerce_coming_soon', false ) ) {
+			update_option( 'woocommerce_coming_soon', $coming_soon );
+		}
+		if ( false === get_option( 'woocommerce_store_pages_only', false ) ) {
+			update_option( 'woocommerce_store_pages_only', $store_pages_only );
+		}
+		if ( false === get_option( 'woocommerce_private_link', false ) ) {
+			update_option( 'woocommerce_private_link', $private_link );
+		}
+		if ( false === get_option( 'woocommerce_share_key', false ) ) {
+			update_option( 'woocommerce_share_key', $share_key );
+		}
+	}
+
 	/**
 	 * Ensures fatal errors are logged so they can be picked up in the status report.
 	 *
@@ -294,13 +352,32 @@ final class WooCommerce {
 	public function log_errors() {
 		$error = error_get_last();
 		if ( $error && in_array( $error['type'], array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR ), true ) ) {
+			$error_copy = $error;
+			$message    = $error_copy['message'];
+			unset( $error_copy['message'] );
+
+			$context = array(
+				'source' => 'fatal-errors',
+				'error'  => $error_copy,
+			);
+
+			if ( false !== strpos( $message, 'Stack trace:' ) ) {
+				$segments  = explode( 'Stack trace:', $message );
+				$message   = str_replace( PHP_EOL, ' ', trim( $segments[0] ) );
+				$backtrace = array_map(
+					'trim',
+					explode( PHP_EOL, $segments[1] )
+				);
+
+				$context['backtrace'] = $backtrace;
+			} else {
+				$context['backtrace'] = true;
+			}
+
 			$logger = wc_get_logger();
 			$logger->critical(
-				/* translators: 1: error message 2: file name and path 3: line number */
-				sprintf( __( '%1$s in %2$s on line %3$s', 'woocommerce' ), $error['message'], $error['file'], $error['line'] ) . PHP_EOL,
-				array(
-					'source' => 'fatal-errors',
-				)
+				$message,
+				$context
 			);
 
 			/**
@@ -326,9 +403,18 @@ final class WooCommerce {
 		$this->define( 'WC_DISCOUNT_ROUNDING_MODE', 2 );
 		$this->define( 'WC_TAX_ROUNDING_MODE', 'yes' === get_option( 'woocommerce_prices_include_tax', 'no' ) ? 2 : 1 );
 		$this->define( 'WC_DELIMITER', '|' );
-		$this->define( 'WC_LOG_DIR', $upload_dir['basedir'] . '/wc-logs/' );
 		$this->define( 'WC_SESSION_CACHE_GROUP', 'wc_session_id' );
 		$this->define( 'WC_TEMPLATE_DEBUG_MODE', false );
+
+		/**
+		 * As of 8.8.0, it is preferable to use the `woocommerce_log_directory` filter hook to change the log
+		 * directory. WC_LOG_DIR_CUSTOM is a back-compatibility measure so we can tell if `WC_LOG_DIR` has been
+		 * defined outside of WC Core.
+		 */
+		if ( defined( 'WC_LOG_DIR' ) ) {
+			$this->define( 'WC_LOG_DIR_CUSTOM', true );
+		}
+		$this->define( 'WC_LOG_DIR', LoggingUtil::get_log_directory() );
 
 		// These three are kept defined for compatibility, but are no longer used.
 		$this->define( 'WC_NOTICE_MIN_PHP_VERSION', '7.2' );
@@ -346,7 +432,6 @@ final class WooCommerce {
 		 * The SSR in the name is preserved for bw compatibility, as this was initially used in System Status Report.
 		 */
 		$this->define( 'WC_SSR_PLUGIN_UPDATE_RELEASE_VERSION_TYPE', 'none' );
-
 	}
 
 	/**
@@ -594,6 +679,10 @@ final class WooCommerce {
 
 		if ( $this->is_request( 'admin' ) ) {
 			include_once WC_ABSPATH . 'includes/admin/class-wc-admin.php';
+		}
+
+		if ( $this->is_request( 'admin' ) || $this->is_request( 'cron' ) ) {
+			include_once WC_ABSPATH . 'includes/admin/class-wc-admin-marketplace-promotions.php';
 		}
 
 		// We load frontend includes in the post editor, because they may be invoked via pre-loading of blocks.
@@ -887,14 +976,15 @@ final class WooCommerce {
 	/**
 	 * Initialize the customer and cart objects and setup customer saving on shutdown.
 	 *
+	 * Note, wc()->customer is session based. Changes to customer data via this property are not persisted to the database automatically.
+	 *
 	 * @since 3.6.4
 	 * @return void
 	 */
 	public function initialize_cart() {
-		// Cart needs customer info.
 		if ( is_null( $this->customer ) || ! $this->customer instanceof WC_Customer ) {
 			$this->customer = new WC_Customer( get_current_user_id(), true );
-			// Customer should be saved during shutdown.
+			// Customer session should be saved during shutdown.
 			add_action( 'shutdown', array( $this->customer, 'save' ), 10 );
 		}
 		if ( is_null( $this->cart ) || ! $this->cart instanceof WC_Cart ) {
@@ -933,7 +1023,7 @@ final class WooCommerce {
 	 * @param string $filename The filename of the activated plugin.
 	 */
 	public function activated_plugin( $filename ) {
-		include_once dirname( __FILE__ ) . '/admin/helper/class-wc-helper.php';
+		include_once __DIR__ . '/admin/helper/class-wc-helper.php';
 
 		if ( '/woocommerce.php' === substr( $filename, -16 ) ) {
 			set_transient( 'woocommerce_activated_plugin', $filename );
@@ -949,7 +1039,7 @@ final class WooCommerce {
 	 * @param string $filename The filename of the deactivated plugin.
 	 */
 	public function deactivated_plugin( $filename ) {
-		include_once dirname( __FILE__ ) . '/admin/helper/class-wc-helper.php';
+		include_once __DIR__ . '/admin/helper/class-wc-helper.php';
 
 		WC_Helper::deactivated_plugin( $filename );
 	}

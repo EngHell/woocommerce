@@ -48,7 +48,7 @@ The WooCommerce Blocks Handbook provides documentation for designers and develop
     -   [Tag](../assets/js/editor-components/tag/README.md)
     -   [TextToolbarButton](../assets/js/editor-components/text-toolbar-button/README.md)
 -   [Icons](../assets/js/icons/README.md)
--   [Store API (REST API)](../src/StoreApi/README.md)
+-   [Store API (REST API)](../../woocommerce/src/StoreApi/README.md)
 -   [Storybook](../storybook/README.md)
 -   [Templates](internal-developers/templates/README.md)
     -   [BlockTemplateController.php](internal-developers/templates/block-template-controller.md)
@@ -127,7 +127,7 @@ The WooCommerce Blocks Handbook provides documentation for designers and develop
 
 ### Articles
 
-The following posts from [developer.woocommerce.com](https://developer.woocommerce.com/category/developer-resources/) provide deeper insights into the WooCommerce Blocks development.
+The following posts from [developer.woo.com](https://developer.woocommerce.com/category/developer-resources/) provide deeper insights into the WooCommerce Blocks development.
 
 -   [Store API is now considered stable](https://developer.woocommerce.com/2022/03/25/store-api-is-now-considered-stable/)
 -   [Available Extensibility Interfaces for The Cart and Checkout Blocks](https://developer.woocommerce.com/2021/11/09/available-extensibility-interfaces-for-the-cart-and-checkout-blocks/)
@@ -136,7 +136,7 @@ The following posts from [developer.woocommerce.com](https://developer.woocommer
 
 ### Tutorials
 
-The following tutorials from [developer.woocommerce.com](https://developer.woocommerce.com/category/tutorials/) help you with extending the WooCommerce Blocks plugin.
+The following tutorials from [developer.woo.com](https://developer.woocommerce.com/category/tutorials/) help you with extending the WooCommerce Blocks plugin.
 
 -   [📺 Tutorial: Extending the WooCommerce Checkout Block](https://developer.woocommerce.com/2023/08/07/extending-the-woocommerce-checkout-block-to-add-custom-shipping-options/)
 -   [Hiding Shipping and Payment Options in the Cart and Checkout Blocks](https://developer.woocommerce.com/2022/05/20/hiding-shipping-and-payment-options-in-the-cart-and-checkout-blocks/)
@@ -152,4 +152,3 @@ The following tutorials from [developer.woocommerce.com](https://developer.wooco
 🐞 Found a mistake, or have a suggestion? [Leave feedback about this document here.](https://github.com/woocommerce/woocommerce-blocks/issues/new?assignees=&labels=type%3A+documentation&template=--doc-feedback.md&title=Feedback%20on%20./docs/README.md)
 
 <!-- /FEEDBACK -->
-

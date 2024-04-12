@@ -27,14 +27,18 @@ import {
 	ReorderProductsModal,
 } from '../../../components/add-products-modal';
 import { ProductEditorBlockEditProps } from '../../../types';
-import { Shirt, Pants, Glasses } from './images';
 import { UploadsBlockAttributes } from './types';
 import {
 	getProductStockStatus,
 	getProductStockStatusClass,
 } from '../../../utils';
+import { Shirt } from '../../../images/shirt';
+import { Pants } from '../../../images/pants';
+import { Glasses } from '../../../images/glasses';
+import { AdviceCard } from '../../../components/advice-card';
+import { SectionActions } from '../../../components/block-slot-fill';
 
-export function Edit( {
+export function ProductListBlockEdit( {
 	attributes,
 	context: { postType },
 }: ProductEditorBlockEditProps< UploadsBlockAttributes > ) {
@@ -120,7 +124,7 @@ export function Edit( {
 
 	return (
 		<div { ...blockProps }>
-			<div className="wp-block-woocommerce-product-list-field__header">
+			<SectionActions>
 				{ ! isLoading && groupedProducts.length > 0 && (
 					<Button
 						onClick={ handleReorderProductsButtonClick }
@@ -135,26 +139,21 @@ export function Edit( {
 				>
 					{ __( 'Add products', 'woocommerce' ) }
 				</Button>
-			</div>
+			</SectionActions>
 
 			<div className="wp-block-woocommerce-product-list-field__body">
 				{ ! isLoading && groupedProducts.length === 0 && (
-					<div className="wp-block-woocommerce-product-list-field__empty-state">
-						<div
-							className="wp-block-woocommerce-product-list-field__empty-state-illustration"
-							role="presentation"
-						>
-							<Shirt />
-							<Pants />
-							<Glasses />
-						</div>
-						<p className="wp-block-woocommerce-product-list-field__empty-state-tip">
-							{ __(
-								'Tip: Group together items that have a clear relationship or compliment each other well, e.g., garment bundles, camera kits, or skincare product sets.',
-								'woocommerce'
-							) }
-						</p>
-					</div>
+					<AdviceCard
+						tip={ __(
+							'Tip: Group together items that have a clear relationship or compliment each other well, e.g., garment bundles, camera kits, or skincare product sets.',
+							'woocommerce'
+						) }
+						isDismissible={ false }
+					>
+						<Shirt />
+						<Pants />
+						<Glasses />
+					</AdviceCard>
 				) }
 
 				{ ! isLoading && groupedProducts.length > 0 && (

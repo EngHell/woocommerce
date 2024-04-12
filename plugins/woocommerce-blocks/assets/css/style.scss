@@ -1,3 +1,7 @@
+body.wc-block-product-gallery-modal-open {
+	overflow: hidden;
+}
+
 // These styles are for the server side rendered product grid blocks.
 .wc-block-grid__products .wc-block-grid__product-image {
 	text-decoration: none;
@@ -105,7 +109,7 @@
 		line-height: 1.618;
 		font-size: 1em;
 		/* stylelint-disable-next-line font-family-no-missing-generic-family-keyword */
-		font-family: star;
+		font-family: WooCommerce;
 		font-weight: 400;
 		margin: 0 auto;
 		text-align: left;

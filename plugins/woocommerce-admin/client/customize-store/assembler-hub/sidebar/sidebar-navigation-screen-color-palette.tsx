@@ -20,6 +20,7 @@ import { CustomizeStoreContext } from '../';
 import { SidebarNavigationScreen } from './sidebar-navigation-screen';
 import { ADMIN_URL } from '~/utils/admin-settings';
 import { ColorPalette, ColorPanel } from './global-styles';
+import { FlowType } from '~/customize-store/types';
 
 const { GlobalStylesContext } = unlock( blockEditorPrivateApis );
 
@@ -56,9 +57,14 @@ const SidebarNavigationScreenColorPaletteContent = () => {
 
 export const SidebarNavigationScreenColorPalette = () => {
 	const {
-		context: { aiOnline },
+		context: { flowType },
 	} = useContext( CustomizeStoreContext );
 
+	const aiOnline = flowType === FlowType.AIOnline;
+
+	const title = aiOnline
+		? __( 'Change the color palette', 'woocommerce' )
+		: __( 'Choose your color palette', 'woocommerce' );
 	const description = aiOnline
 		? __(
 				'Based on the info you shared, our AI tool recommends using this color palette. Want to change it? You can select or add new colors below, or update them later in <EditorLink>Editor</EditorLink> | <StyleLink>Styles</StyleLink>.',
@@ -71,7 +77,7 @@ export const SidebarNavigationScreenColorPalette = () => {
 
 	return (
 		<SidebarNavigationScreen
-			title={ __( 'Change the color palette', 'woocommerce' ) }
+			title={ title }
 			description={ createInterpolateElement( description, {
 				EditorLink: (
 					<Link

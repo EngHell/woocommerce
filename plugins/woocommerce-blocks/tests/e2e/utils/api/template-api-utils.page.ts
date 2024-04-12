@@ -3,6 +3,7 @@
  */
 import { request as req } from '@playwright/test';
 import fs from 'fs/promises';
+
 /**
  * Internal dependencies
  */
@@ -41,7 +42,7 @@ export class TemplateApiUtils {
 			{
 				data: {
 					id: slug,
-					content: content.raw,
+					content: content?.raw,
 					source: 'theme',
 				},
 				headers: {

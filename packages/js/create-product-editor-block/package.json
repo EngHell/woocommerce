@@ -6,8 +6,8 @@
 	"license": "GPL-3.0-or-later",
 	"main": "index.js",
 	"engines": {
-		"node": "^16.14.1",
-		"pnpm": "^8.6.7"
+		"node": "^20.11.1",
+		"pnpm": "^8.12.1"
 	},
 	"scripts": {
 		"changelog": "composer install && composer exec -- changelogger"
@@ -28,6 +28,6 @@
 		"access": "public"
 	},
 	"devDependencies": {
-		"wireit": "0.14.1"
+		"wireit": "0.14.3"
 	}
 }

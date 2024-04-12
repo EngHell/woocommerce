@@ -10,11 +10,12 @@ import { chevronDown, chevronUp } from '@wordpress/icons';
  * Internal dependencies
  */
 import { DownloadsMenuProps } from './types';
-import { MediaLibraryMenuItem } from '../media-library-menu-item';
 import { InsertUrlMenuItem } from '../insert-url-menu-item';
+import { UploadFilesMenuItem } from '../upload-files-menu-item';
 
 export function DownloadsMenu( {
 	allowedTypes,
+	maxUploadFileSize,
 	onUploadSuccess,
 	onUploadError,
 }: DownloadsMenuProps ) {
@@ -39,12 +40,14 @@ export function DownloadsMenu( {
 			renderContent={ ( { onClose } ) => (
 				<div className="components-dropdown-menu__menu">
 					<MenuGroup>
-						<MediaLibraryMenuItem
+						<UploadFilesMenuItem
 							allowedTypes={ allowedTypes }
+							maxUploadFileSize={ maxUploadFileSize }
 							onUploadSuccess={ ( files ) => {
 								onUploadSuccess( files );
 								onClose();
 							} }
+							onUploadError={ onUploadError }
 						/>
 
 						<InsertUrlMenuItem

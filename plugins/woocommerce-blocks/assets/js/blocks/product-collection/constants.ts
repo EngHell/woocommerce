@@ -60,6 +60,7 @@ export const DEFAULT_QUERY: ProductCollectionQuery = {
 	woocommerceAttributes: [],
 	woocommerceHandPickedProducts: [],
 	timeFrame: undefined,
+	priceRange: undefined,
 };
 
 export const DEFAULT_ATTRIBUTES: Partial< ProductCollectionAttributes > = {
@@ -70,6 +71,8 @@ export const DEFAULT_ATTRIBUTES: Partial< ProductCollectionAttributes > = {
 		columns: 3,
 		shrinkColumns: true,
 	},
+	queryContextIncludes: [ 'collection' ],
+	forcePageReload: false,
 };
 
 export const getDefaultQuery = (
@@ -91,14 +94,25 @@ export const getDefaultSettings = (
 	query: getDefaultQuery( currentAttributes.query ),
 } );
 
-export const DEFAULT_FILTERS: Partial< ProductCollectionQuery > = {
+export const DEFAULT_FILTERS: Pick<
+	ProductCollectionQuery,
+	| 'woocommerceOnSale'
+	| 'woocommerceStockStatus'
+	| 'woocommerceAttributes'
+	| 'woocommerceHandPickedProducts'
+	| 'taxQuery'
+	| 'featured'
+	| 'timeFrame'
+	| 'priceRange'
+> = {
 	woocommerceOnSale: DEFAULT_QUERY.woocommerceOnSale,
-	woocommerceStockStatus: getDefaultStockStatuses(),
-	woocommerceAttributes: [],
+	woocommerceStockStatus: DEFAULT_QUERY.woocommerceStockStatus,
+	woocommerceAttributes: DEFAULT_QUERY.woocommerceAttributes,
+	woocommerceHandPickedProducts: DEFAULT_QUERY.woocommerceHandPickedProducts,
 	taxQuery: DEFAULT_QUERY.taxQuery,
-	woocommerceHandPickedProducts: [],
 	featured: DEFAULT_QUERY.featured,
-	timeFrame: undefined,
+	timeFrame: DEFAULT_QUERY.timeFrame,
+	priceRange: DEFAULT_QUERY.priceRange,
 };
 
 /**
@@ -150,8 +164,9 @@ export const INNER_BLOCKS_PRODUCT_TEMPLATE: InnerBlockTemplate = [
 	],
 ];
 
+export const coreQueryPaginationBlockName = 'core/query-pagination';
 export const INNER_BLOCKS_PAGINATION_TEMPLATE: InnerBlockTemplate = [
-	'core/query-pagination',
+	coreQueryPaginationBlockName,
 	{
 		layout: {
 			type: 'flex',

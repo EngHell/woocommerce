@@ -6,6 +6,10 @@ declare module '@woocommerce/settings' {
 		filter = ( val: unknown, fb: unknown ) =>
 			typeof val !== 'undefined' ? val : fb
 	): T;
+	export declare function isWpVersion(
+		version: string,
+		operator: '>' | '>=' | '=' | '<' | '<='
+	): boolean;
 }
 
 declare module '@wordpress/core-data' {
@@ -15,4 +19,9 @@ declare module '@wordpress/core-data' {
 		prop: string,
 		id?: string
 	): [ T, ( value: T ) => void, T ];
+	function useEntityRecord< T = unknown >(
+		kind: string,
+		name: string,
+		id: number | string
+	): { record: T, editedRecord: T };
 }

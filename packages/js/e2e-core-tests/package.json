@@ -9,8 +9,8 @@
 	},
 	"license": "GPL-3.0+",
 	"engines": {
-		"node": "^16.14.1",
-		"pnpm": "^8.6.7"
+		"node": "^20.11.1",
+		"pnpm": "^8.12.1"
 	},
 	"main": "build/index.js",
 	"module": "build-module/index.js",
@@ -56,7 +56,7 @@
 		"@wordpress/browserslist-config": "wp-6.0",
 		"eslint": "^8.55.0",
 		"eslint-plugin-jest": "23.20.0",
-		"wireit": "0.14.1"
+		"wireit": "0.14.3"
 	},
 	"peerDependencies": {
 		"@woocommerce/api": "^0.2.0",
@@ -64,5 +64,13 @@
 	},
 	"publishConfig": {
 		"access": "public"
+	},
+	"config": {
+		"ci": {
+			"lint": {
+				"command": "lint",
+				"changes": "src/**/*.{js,ts,tsx}"
+			}
+		}
 	}
 }

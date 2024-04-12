@@ -30,6 +30,7 @@ import { GoBackWarningModal } from '../go-back-warning-modal';
  * Internal dependencies
  */
 import { CustomizeStoreContext } from '../';
+import { isAIFlow } from '~/customize-store/guards';
 const { useLocation } = unlock( routerPrivateApis );
 
 export const SidebarNavigationScreen = ( {
@@ -53,12 +54,13 @@ export const SidebarNavigationScreen = ( {
 	backPath?: string;
 	onNavigateBackClick?: () => void;
 } ) => {
-	const { sendEvent } = useContext( CustomizeStoreContext );
+	const { context } = useContext( CustomizeStoreContext );
 	const [ openWarningModal, setOpenWarningModal ] =
 		useState< boolean >( false );
 	const location = useLocation();
 	const navigator = useNavigator();
 	const icon = isRTL() ? chevronRight : chevronLeft;
+	const flowType = context?.flowType;
 
 	return (
 		<>
@@ -146,7 +148,11 @@ export const SidebarNavigationScreen = ( {
 				<GoBackWarningModal
 					setOpenWarningModal={ setOpenWarningModal }
 					onExitClicked={ () => {
-						sendEvent( 'GO_BACK_TO_DESIGN_WITH_AI' );
+						window.parent.__wcCustomizeStore.sendEventToIntroMachine(
+							flowType && isAIFlow( flowType )
+								? { type: 'GO_BACK_TO_DESIGN_WITH_AI' }
+								: { type: 'GO_BACK_TO_DESIGN_WITHOUT_AI' }
+						);
 					} }
 				/>
 			) }

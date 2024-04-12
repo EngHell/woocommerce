@@ -72,6 +72,7 @@ import recordTracksActions from './actions/tracks';
 import { ComponentMeta } from './types';
 import { getCountryCode } from '~/dashboard/utils';
 import { getAdminSetting } from '~/utils/admin-settings';
+import { useXStateInspect } from '~/xstate';
 
 export type InitializationCompleteEvent = {
 	type: 'INITIALIZATION_COMPLETE';
@@ -608,7 +609,7 @@ const getPlugins = async () => {
 	);
 };
 
-/** Special callback that is used to trigger a navigation event if the user uses the browser's back or foward buttons */
+/** Special callback that is used to trigger a navigation event if the user uses the browser's back or forward buttons */
 const browserPopstateHandler = () => ( sendBack: Sender< AnyEventObject > ) => {
 	const popstateHandler = () => {
 		sendBack( 'EXTERNAL_URL_UPDATE' );
@@ -1204,7 +1205,7 @@ export const coreProfilerStateMachineDefinition = createMachine( {
 							},
 						},
 						// Although we don't need to wait 3 seconds for the following states
-						// We will dispaly 20% and 80% progress for 1.5 seconds each
+						// We will display 20% and 80% progress for 1.5 seconds each
 						// for the sake of user experience.
 						progress20: {
 							entry: assign( {
@@ -1571,8 +1572,10 @@ export const CoreProfilerController = ( {
 		} );
 	}, [ actionOverrides, servicesOverrides ] );
 
+	const { versionEnabled } = useXStateInspect();
+
 	const [ state, send, service ] = useMachine( augmentedStateMachine, {
-		devTools: process.env.NODE_ENV === 'development',
+		devTools: versionEnabled === 'V4',
 	} );
 
 	// eslint-disable-next-line react-hooks/exhaustive-deps -- false positive due to function name match, this isn't from react std lib

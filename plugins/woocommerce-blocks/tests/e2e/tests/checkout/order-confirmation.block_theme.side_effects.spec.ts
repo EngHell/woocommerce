@@ -2,6 +2,7 @@
  * External dependencies
  */
 import { test as base, expect } from '@woocommerce/e2e-playwright-utils';
+import { guestFile } from '@woocommerce/e2e-utils';
 
 /**
  * Internal dependencies
@@ -36,28 +37,29 @@ const test = base.extend< { pageObject: CheckoutPage } >( {
 	},
 } );
 
-test.describe( 'Shopper → Order Confirmation', () => {
-	test.beforeEach( async ( { admin, editorUtils } ) => {
+test.describe( 'Shopper → Order Confirmation (logged in user)', () => {
+	test.beforeEach( async ( { admin, editorUtils, localPickupUtils } ) => {
+		await localPickupUtils.disableLocalPickup();
+
 		await admin.visitSiteEditor( {
 			postId: 'woocommerce/woocommerce//order-confirmation',
 			postType: 'wp_template',
 		} );
 		await editorUtils.enterEditMode();
-		await editorUtils.closeWelcomeGuideModal();
 		await editorUtils.transformIntoBlocks();
 	} );
 
-	test( 'Place order as a logged in user', async ( {
-		frontendUtils,
-		pageObject,
-		page,
-	} ) => {
+	test.afterEach( async ( { localPickupUtils } ) => {
+		await localPickupUtils.enableLocalPickup();
+	} );
+
+	test( 'Place order', async ( { frontendUtils, pageObject, page } ) => {
 		await frontendUtils.emptyCart();
 		await frontendUtils.goToShop();
 		await frontendUtils.addToCart( SIMPLE_PHYSICAL_PRODUCT_NAME );
 		await frontendUtils.addToCart( SIMPLE_VIRTUAL_PRODUCT_NAME );
 		await frontendUtils.goToCheckout();
-		await expect(
+		expect(
 			await pageObject.selectAndVerifyShippingOption(
 				FREE_SHIPPING_NAME,
 				FREE_SHIPPING_PRICE
@@ -102,7 +104,7 @@ test.describe( 'Shopper → Order Confirmation', () => {
 		await pageObject.verifyOrderConfirmationDetails( page, false );
 
 		// Access page without order ID or key (test visibility of default message)
-		await page.goto( '/checkout-block/order-received' );
+		await page.goto( '/checkout/order-received' );
 		// Confirm default message is visible
 		await expect(
 			page.getByText(
@@ -116,60 +118,36 @@ test.describe( 'Shopper → Order Confirmation', () => {
 		// - Confirm details are hidden when logged out
 		// - Confirm data is hidden without valid session/key
 	} );
+} );
 
-	// This test is skipped until the multiple sign in roles is implemented
-	// See: https://github.com/woocommerce/woocommerce-blocks/pull/10561
-	// eslint-disable-next-line playwright/no-skipped-test
-	test.skip( 'Place order as guest user', async ( {
-		frontendUtils,
-		pageObject,
-		page,
-	} ) => {
+test.describe( 'Shopper → Order Confirmation (guest user)', () => {
+	test.use( { storageState: guestFile } );
+
+	test( 'Place order', async ( { frontendUtils, pageObject, page } ) => {
+		await page.goto( '/my-account' );
+
+		await expect(
+			page.getByRole( 'heading', { name: 'Login' } ),
+			'User is not logged out'
+		).toBeVisible();
+
 		await frontendUtils.emptyCart();
 		await frontendUtils.goToShop();
 		await frontendUtils.addToCart( SIMPLE_PHYSICAL_PRODUCT_NAME );
 		await frontendUtils.goToCheckout();
-		await expect(
+
+		expect(
 			await pageObject.selectAndVerifyShippingOption(
 				FREE_SHIPPING_NAME,
 				FREE_SHIPPING_PRICE
 			)
 		).toBe( true );
+
 		await pageObject.fillInCheckoutWithTestData( testData );
 		await pageObject.placeOrder();
 
-		// confirm details are limited
 		await expect(
 			page.getByText( 'Thank you. Your order has been received.' )
-		).toBeVisible();
-		await expect(
-			page.getByRole( 'listitem' ).filter( { hasText: 'Email' } )
-		).toBeHidden();
-		await expect(
-			page.getByRole( 'listitem' ).filter( { hasText: 'Payment method' } )
-		).toBeHidden();
-		await expect(
-			page.locator(
-				'[data-block-name="woocommerce/order-confirmation-billing-address"]'
-			)
-		).toBeHidden();
-		await expect(
-			page.locator(
-				'[data-block-name="woocommerce/order-confirmation-totals"]'
-			)
-		).toBeVisible();
-		await expect(
-			page.locator(
-				'[data-block-name="woocommerce/order-confirmation-summary"]'
-			)
-		).toBeVisible();
-
-		const { postcode, city, state, country } = testData;
-
-		await expect(
-			page.getByText(
-				`Shipping to ${ postcode }, ${ city }, ${ state }, ${ country }`
-			)
 		).toBeVisible();
 	} );
 } );
@@ -181,7 +159,8 @@ test.describe( 'Shopper → Order Confirmation → Local Pickup', () => {
 		admin,
 	} ) => {
 		await admin.visitAdminPage(
-			'admin.php?page=wc-settings&tab=shipping&section=pickup_location'
+			'admin.php',
+			'page=wc-settings&tab=shipping&section=pickup_location'
 		);
 		await admin.page.getByLabel( 'Enable local pickup' ).uncheck();
 		await admin.page.getByLabel( 'Enable local pickup' ).check();
@@ -254,7 +233,7 @@ test.describe( 'Shopper → Order Confirmation → Downloadable Products', () =>
 		).toBeHidden();
 
 		// Update last order status to completed.
-		await admin.visitAdminPage( 'edit.php?post_type=shop_order' );
+		await admin.visitAdminPage( 'edit.php', 'post_type=shop_order' );
 		await admin.page.waitForSelector( '.wp-list-table' );
 		await admin.page.click(
 			'.wp-list-table tbody tr:first-child a.order-view'

@@ -9,8 +9,8 @@
 		"woocommerce"
 	],
 	"engines": {
-		"node": "^16.14.1",
-		"pnpm": "^8.6.7"
+		"node": "^20.11.1",
+		"pnpm": "^8.12.1"
 	},
 	"homepage": "https://github.com/woocommerce/woocommerce/tree/trunk/packages/js/dependency-extraction-webpack-plugin/README.md",
 	"repository": {
@@ -36,12 +36,12 @@
 		"eslint": "^8.55.0",
 		"jest": "~27.5.1",
 		"jest-cli": "~27.5.1",
-		"rimraf": "^3.0.2",
+		"rimraf": "5.0.5",
 		"ts-jest": "~29.1.1",
 		"typescript": "^5.3.3",
 		"webpack": "^5.89.0",
 		"webpack-cli": "^3.3.12",
-		"wireit": "0.14.1"
+		"wireit": "0.14.3"
 	},
 	"scripts": {
 		"changelog": "composer install && composer exec -- changelogger",
@@ -54,5 +54,13 @@
 		"*.(t|j)s?(x)": [
 			"eslint --fix"
 		]
+	},
+	"config": {
+		"ci": {
+			"lint": {
+				"command": "lint",
+				"changes": "src/**/*.js"
+			}
+		}
 	}
 }

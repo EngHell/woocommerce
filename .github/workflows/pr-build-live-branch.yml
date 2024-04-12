@@ -1,8 +1,14 @@
-name: Build Live Branch
+name: Build PR Live Branch
 on:
     pull_request:
         paths-ignore:
+            - '.github/**'
+            - 'docs/**'
+            - 'packages/php/**'
+            - 'tools/**'
             - '**/changelog/**'
+            - '**/tests/**'
+            - '**/*.md'
 
 concurrency:
     # Cancel concurrent jobs on pull_request but not push, by including the run_id in the concurrency group for the latter.
@@ -36,6 +42,8 @@ jobs:
               id: prepare
               env:
                   CURRENT_VERSION: ${{ steps.version.outputs.version }}
+                  # Build with experimental blocks.
+                  WOOCOMMERCE_BLOCKS_PHASE: 3
               run: |
 
                   # Current version must compare greather than any previously used current version for this PR.

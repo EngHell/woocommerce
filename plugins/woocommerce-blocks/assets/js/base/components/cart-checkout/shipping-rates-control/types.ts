@@ -10,7 +10,7 @@ import type { ReactElement } from 'react';
 import {
 	PackageRateRenderOption,
 	TernaryFlag,
-} from '../shipping-rates-control-package';
+} from '../shipping-rates-control-package/types';
 
 export interface PackagesProps {
 	// Array of packages
@@ -27,6 +27,9 @@ export interface PackagesProps {
 
 	// Function to render a shipping rate
 	renderOption: PackageRateRenderOption;
+
+	// The context that this component is rendered in (Cart/Checkout)
+	context?: 'woocommerce/cart' | 'woocommerce/checkout' | '';
 }
 
 export interface ShippingRatesControlProps {

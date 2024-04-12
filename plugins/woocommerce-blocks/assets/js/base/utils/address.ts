@@ -1,18 +1,20 @@
 /**
  * External dependencies
  */
-import prepareAddressFields from '@woocommerce/base-components/cart-checkout/address-form/prepare-address-fields';
+import prepareFormFields from '@woocommerce/base-components/cart-checkout/form/prepare-form-fields';
 import { isEmail } from '@wordpress/url';
-import type {
-	CartResponseBillingAddress,
-	CartResponseShippingAddress,
+import {
+	isString,
+	type CartResponseBillingAddress,
+	type CartResponseShippingAddress,
+	isObject,
 } from '@woocommerce/types';
 import { ShippingAddress, BillingAddress } from '@woocommerce/settings';
 import { decodeEntities } from '@wordpress/html-entities';
 import {
 	SHIPPING_COUNTRIES,
 	SHIPPING_STATES,
-	ADDRESS_FIELDS_KEYS,
+	ADDRESS_FORM_KEYS,
 } from '@woocommerce/block-settings';
 
 /**
@@ -22,7 +24,7 @@ export const isSameAddress = < T extends ShippingAddress | BillingAddress >(
 	address1: T,
 	address2: T
 ): boolean => {
-	return Object.keys( ADDRESS_FIELDS_KEYS ).every( ( field: string ) => {
+	return ADDRESS_FORM_KEYS.every( ( field: string ) => {
 		return address1[ field as keyof T ] === address2[ field as keyof T ];
 	} );
 };
@@ -89,14 +91,14 @@ export const emptyHiddenAddressFields = <
 >(
 	address: T
 ): T => {
-	const addressFields = prepareAddressFields(
-		ADDRESS_FIELDS_KEYS,
+	const addressForm = prepareFormFields(
+		ADDRESS_FORM_KEYS,
 		{},
 		address.country
 	);
 	const newAddress = Object.assign( {}, address ) as T;
 
-	addressFields.forEach( ( { key = '', hidden = false } ) => {
+	addressForm.forEach( ( { key = '', hidden = false } ) => {
 		if ( hidden && isValidAddressKey( key, address ) ) {
 			newAddress[ key ] = '';
 		}
@@ -105,6 +107,37 @@ export const emptyHiddenAddressFields = <
 	return newAddress;
 };
 
+/**
+ * Sets fields to an empty string in an address.
+ *
+ * @param {Object} address The address to empty fields from.
+ * @return {Object} The address with all fields values removed.
+ */
+export const emptyAddressFields = <
+	T extends CartResponseBillingAddress | CartResponseShippingAddress
+>(
+	address: T
+): T => {
+	const addressForm = prepareFormFields(
+		ADDRESS_FORM_KEYS,
+		{},
+		address.country
+	);
+	const newAddress = Object.assign( {}, address ) as T;
+
+	addressForm.forEach( ( { key = '' } ) => {
+		// Clear address fields except country and state to keep consistency with shortcode Checkout.
+		if (
+			key !== 'country' &&
+			key !== 'state' &&
+			isValidAddressKey( key, address )
+		) {
+			newAddress[ key ] = '';
+		}
+	} );
+
+	return newAddress;
+};
 /*
  * Formats a shipping address for display.
  *
@@ -118,14 +151,13 @@ export const formatShippingAddress = (
 	if ( Object.values( address ).length === 0 ) {
 		return null;
 	}
-	const formattedCountry =
-		typeof SHIPPING_COUNTRIES[ address.country ] === 'string'
-			? decodeEntities( SHIPPING_COUNTRIES[ address.country ] )
-			: '';
+	const formattedCountry = isString( SHIPPING_COUNTRIES[ address.country ] )
+		? decodeEntities( SHIPPING_COUNTRIES[ address.country ] )
+		: '';
 
 	const formattedState =
-		typeof SHIPPING_STATES[ address.country ] === 'object' &&
-		typeof SHIPPING_STATES[ address.country ][ address.state ] === 'string'
+		isObject( SHIPPING_STATES[ address.country ] ) &&
+		isString( SHIPPING_STATES[ address.country ][ address.state ] )
 			? decodeEntities(
 					SHIPPING_STATES[ address.country ][ address.state ]
 			  )
@@ -156,13 +188,13 @@ export const isAddressComplete = (
 	if ( ! address.country ) {
 		return false;
 	}
-	const addressFields = prepareAddressFields(
-		ADDRESS_FIELDS_KEYS,
+	const addressForm = prepareFormFields(
+		ADDRESS_FORM_KEYS,
 		{},
 		address.country
 	);
 
-	return addressFields.every(
+	return addressForm.every(
 		( { key = '', hidden = false, required = false } ) => {
 			if ( hidden || ! required ) {
 				return true;

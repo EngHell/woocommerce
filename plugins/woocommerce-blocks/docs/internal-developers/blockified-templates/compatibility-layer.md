@@ -1,7 +1,19 @@
 # Compatibility Layer - [AbstractTemplateCompatibility.php](https://github.com/woocommerce/woocommerce-blocks/blob/trunk/src/Templates/AbstractTemplateCompatibility.php)
 
 The Compatibility Layer ensures that blockified templates work correctly with extensions that use hooks to extend their behavior. It appends/pre-appends the corresponding hooks to each block. Also, it removes the default callbacks added to those hooks by WooCommerce.
-The Compatibility Layer disables when the `WooCommerce Single Product`, `WooCommerce Product Attribute`, `WooCommerce Product Taxonomy`, `WooCommerce Product Tag`, `WooCommerce Product Search Results` or `WooCommerce Product Grid` block is added on the page. Furthermore, it is possible to disable the compatibility layer via the hook: [`woocommerce_disable_compatibility_layer`](https://github.com/woocommerce/woocommerce-blocks/blob/trunk/src/Templates/AbstractTemplateCompatibility.php/#L41-L42).
+
+The Compatibility Layer is disabled when either of classic template blocks are added on the page:
+
+- `WooCommerce Single Product`,
+- `WooCommerce Product Attribute`,
+- `WooCommerce Product Taxonomy`,
+- `WooCommerce Product Tag`,
+- `WooCommerce Product Search Results`,
+- `WooCommerce Product Grid`.
+
+Please note these blocks represent classic templates. As an example, using Single Product block won't disable Compatibility Layer.
+
+Furthermore, it is possible to disable the compatibility layer via the hook: [`woocommerce_disable_compatibility_layer`](https://github.com/woocommerce/woocommerce-blocks/blob/trunk/src/Templates/AbstractTemplateCompatibility.php/#L41-L42).
 
 ## Archive Product Templates - [ArchiveProductTemplatesCompatibility](https://github.com/woocommerce/woocommerce-blocks/blob/trunk/src/Templates/ArchiveProductTemplatesCompatibility.php)
 
@@ -43,7 +55,7 @@ The following table shows where the hooks are injected into the page.
 | woocommerce_sidebar                       | Last block related to the Single Product Template (Product Image Gallery, Product Details, Add to Cart Form, Product Meta, Product Price, Breadcrumbs)  | after    |
 | woocommerce_before_single_product         | First block related to the Single Product Template (Product Image Gallery, Product Details, Add to Cart Form, Product Meta, Product Price, Breadcrumbs) | before   |
 | woocommerce_before_single_product_summary | First block related to the Single Product Template (Product Image Gallery, Product Details, Add to Cart Form, Product Meta, Product Price, Breadcrumbs) | before   |
-| woocommerce_single_product_summary        | First block related to the Single Product Template (Product Image Gallery, Product Details, Add to Cart Form, Product Meta, Product Price, Breadcrumbs) | before   |
+| woocommerce_single_product_summary        | First `core/post-excerpt` block                                                                                                                         | before   |
 | woocommerce_after_single_product          | Last block related to the Single Product Template (Product Image Gallery, Product Details, Add to Cart Form, Product Meta, Product Price, Breadcrumbs)  | after    |
 | woocommerce_product_meta_start            | Product Meta                                                                                                                                           | before   |
 | woocommerce_product_meta_end              | Product Meta                                                                                                                                           | after    |

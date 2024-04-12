@@ -10,14 +10,28 @@ import {
 	PageUtils,
 	RequestUtils,
 } from '@wordpress/e2e-test-utils-playwright';
-
 import {
 	TemplateApiUtils,
 	STORAGE_STATE_PATH,
 	EditorUtils,
 	FrontendUtils,
 	StoreApiUtils,
+	PerformanceUtils,
+	ShippingUtils,
+	LocalPickupUtils,
+	MiniCartUtils,
+	WPCLIUtils,
 } from '@woocommerce/e2e-utils';
+import { Post } from '@wordpress/e2e-test-utils-playwright/build-types/request-utils/posts';
+
+/**
+ * Internal dependencies
+ */
+import {
+	PostPayload,
+	createPostFromTemplate,
+	deletePost,
+} from '../utils/create-dynamic-content';
 
 /**
  * Set of console logging types observed to protect against unexpected yet
@@ -111,14 +125,26 @@ const test = base.extend<
 		editorUtils: EditorUtils;
 		frontendUtils: FrontendUtils;
 		storeApiUtils: StoreApiUtils;
+		performanceUtils: PerformanceUtils;
 		snapshotConfig: void;
+		shippingUtils: ShippingUtils;
+		localPickupUtils: LocalPickupUtils;
+		miniCartUtils: MiniCartUtils;
+		wpCliUtils: WPCLIUtils;
 	},
 	{
-		requestUtils: RequestUtils;
+		requestUtils: RequestUtils & {
+			createPostFromTemplate: (
+				post: PostPayload,
+				templatePath: string,
+				data: unknown
+			) => Promise< Post >;
+			deletePost: ( id: number ) => Promise< void >;
+		};
 	}
 >( {
-	admin: async ( { page, pageUtils }, use ) => {
-		await use( new Admin( { page, pageUtils } ) );
+	admin: async ( { page, pageUtils, editor }, use ) => {
+		await use( new Admin( { page, pageUtils, editor } ) );
 	},
 	editor: async ( { page }, use ) => {
 		await use( new Editor( { page } ) );
@@ -132,8 +158,6 @@ const test = base.extend<
 		await page.evaluate( () => {
 			window.localStorage.clear();
 		} );
-
-		await page.close();
 	},
 	pageUtils: async ( { page }, use ) => {
 		await use( new PageUtils( { page } ) );
@@ -146,8 +170,23 @@ const test = base.extend<
 	frontendUtils: async ( { page, requestUtils }, use ) => {
 		await use( new FrontendUtils( page, requestUtils ) );
 	},
+	performanceUtils: async ( { page }, use ) => {
+		await use( new PerformanceUtils( page ) );
+	},
 	storeApiUtils: async ( { requestUtils }, use ) => {
 		await use( new StoreApiUtils( requestUtils ) );
+	},
+	shippingUtils: async ( { page, admin }, use ) => {
+		await use( new ShippingUtils( page, admin ) );
+	},
+	localPickupUtils: async ( { page, admin }, use ) => {
+		await use( new LocalPickupUtils( page, admin ) );
+	},
+	miniCartUtils: async ( { page, frontendUtils }, use ) => {
+		await use( new MiniCartUtils( page, frontendUtils ) );
+	},
+	wpCliUtils: async ( {}, use ) => {
+		await use( new WPCLIUtils() );
 	},
 	requestUtils: [
 		async ( {}, use, workerInfo ) => {
@@ -156,7 +195,26 @@ const test = base.extend<
 				storageStatePath: STORAGE_STATE_PATH,
 			} );
 
-			await use( requestUtils );
+			const utilCreatePostFromTemplate = (
+				post: Partial< PostPayload >,
+				templatePath: string,
+				data: unknown
+			) =>
+				createPostFromTemplate(
+					requestUtils,
+					post,
+					templatePath,
+					data
+				);
+
+			const utilDeletePost = ( id: number ) =>
+				deletePost( requestUtils, id );
+
+			await use( {
+				...requestUtils,
+				createPostFromTemplate: utilCreatePostFromTemplate,
+				deletePost: utilDeletePost,
+			} );
 		},
 		{ scope: 'worker', auto: true },
 	],
