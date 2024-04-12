@@ -6,6 +6,7 @@ import { Icon, moreVertical, edit, cog } from '@wordpress/icons';
 import { Dropdown, Button, MenuGroup, MenuItem } from '@wordpress/components';
 import { getAdminLink } from '@woocommerce/settings';
 import classnames from 'classnames';
+import { recordEvent } from '@woocommerce/tracks';
 
 /**
  * Internal dependencies
@@ -60,6 +61,11 @@ export const LaunchYourStoreStatus = ( { comingSoon, storePagesOnly } ) => {
 						<>
 							<MenuGroup className="woocommerce-lys-status-popover">
 								<MenuItem
+									onClick={ () => {
+										recordEvent(
+											'launch_your_store_badge_menu_manage_site_visibility_click'
+										);
+									} }
 									href={ getAdminLink(
 										'admin.php?page=wc-settings&tab=site-visibility'
 									) }
@@ -71,7 +77,14 @@ export const LaunchYourStoreStatus = ( { comingSoon, storePagesOnly } ) => {
 									) }
 								</MenuItem>
 								{ isComingSoon && (
-									<MenuItem href={ commingSoonPageLink }>
+									<MenuItem
+										onClick={ () => {
+											recordEvent(
+												'launch_your_store_badge_menu_customize_coming_soon_click'
+											);
+										} }
+										href={ commingSoonPageLink }
+									>
 										<Icon icon={ edit } size={ 24 } />
 										{ __(
 											'Customize "Coming soon" page',
