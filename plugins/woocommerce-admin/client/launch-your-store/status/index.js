@@ -63,7 +63,12 @@ export const LaunchYourStoreStatus = ( { comingSoon, storePagesOnly } ) => {
 								<MenuItem
 									onClick={ () => {
 										recordEvent(
-											'launch_your_store_badge_menu_manage_site_visibility_click'
+											'launch_your_store_badge_menu_manage_site_visibility_click',
+											{
+												site_visibility: isComingSoon
+													? 'coming_soon'
+													: 'live',
+											}
 										);
 									} }
 									href={ getAdminLink(
