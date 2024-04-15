@@ -342,6 +342,15 @@ final class WooCommerce {
 		if ( false === get_option( 'woocommerce_share_key', false ) ) {
 			update_option( 'woocommerce_share_key', $share_key );
 		}
+
+		wc_admin_record_tracks_event(
+			'launch_your_store_feature_enabled',
+			array(
+				'coming_soon'      => $coming_soon,
+				'store_pages_only' => $store_pages_only,
+				'private_link'     => $private_link,
+			)
+		);
 	}
 
 	/**
