@@ -714,7 +714,7 @@
           "menu_title": "Grammar, punctuation and capitalization",
           "tags": "reference",
           "edit_url": "https://github.com/woocommerce/woocommerce/edit/trunk/docs/quality-and-best-practices/grammar-punctuation-capitalization.md",
-          "hash": "bec1145eb80a16db898534dccb83d133c803c1e76d5ef8e7a6ffd902d3822634",
+          "hash": "1d12728a4f568ad0b8ea2e7dd3b1e8d18cc548b4e758040971e0661ba9cb91a2",
           "url": "https://raw.githubusercontent.com/woocommerce/woocommerce/trunk/docs/quality-and-best-practices/grammar-punctuation-capitalization.md",
           "id": "af9f21747d93f0ab504e3713b1844c59c70b1d0e"
         },
@@ -1241,5 +1241,5 @@
       "categories": []
     }
   ],
-  "hash": "ca683a7750097a24dfcb4b472ea3575dd40a05e0ce7bd9dd54277ed3ed30fa61"
+  "hash": "3e65a0b97da1c3d237fb48670e1c0761444404d434476cb64cc9c50802205414"
 }
